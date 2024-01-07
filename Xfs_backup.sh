@@ -1,4 +1,6 @@
 #!/bin/bash
+#set -e
+#set -u
 
 # Provides terminal colors. Not fatal if not exist
 . /scripts/TermColors &> /dev/null
@@ -11,83 +13,101 @@ SCRNAME="${0##*/}"
 SCRNAME="${SCRNAME%.*}.conf"
 
 CONFIGFILE="${DIRNAME}/${SCRNAME}"
-
+DevicesFile="${DIRNAME}/BackTheseUp.conf"
 HOST=$(hostname)
 
 # Provides some static variables
-. "$CONFIGFILE" || ( echo "Config file missing" ; exit 1 )
+if [ -f "$CONFIGFILE" ]
+then
+	. "$CONFIGFILE"
+else
+	echo "Config file missing"
+	exit 1
+fi
+
+# Provides the backup levels and devices to back up
+if [ -f "$DevicesFile" ]
+then
+	. "$DevicesFile"
+else
+	printf "Devices file missing. This is fatal.\n"
+	exit 1
+fi
 
 function showUsage() {
-	echo -e "\n$0 [full|diff|0..9] '/dev/sdX1;desc /dev/sdX2;desc'"
+	printf "\n$0 [full|diff|0..9] '/dev/sdX1;desc /dev/sdX2;desc'\n\n"
 	return 0
 }
 
 if [ "$LOGAPPEND" == 'TRUE' ]
 then
-	exec &>> "$LOGFILE"
+	:
+	#exec &>> "$LOGFILE"
 else
-	exec &> "$LOGFILE"
+	:
+	#exec &> "$LOGFILE"
 fi
 
-# Specify full or diff explicitly
-if [ "${1,,}" == 'full' ]
-then
-	LEVEL=0
-# Specify full or diff explicitly
-elif [ "${1,,}" == 'diff' ]
-then
-	LEVEL=1
-# Specify backup level alternatively.
-elif [ "${1}" -ge 0 -a "${1}" -le 10 ]
-then
-	LEVEL=$1
-else
-	echo "Couldn't determine backup type. Exiting."
-	showUsage
-	exit 1
-fi
-
-if [ "${2}" == '' ]
-then
-	echo "No devices specified. Exiting."
-	showUsage
-	exit 2
-elif ! egrep -qi '/dev/.+' <<< "$2"
-then
-	echo "That doesn't appear to contain a device name."
-	showUsage
-	exit 3
-else
-	DEVANDFRIENDLYNAME="$2"
-fi
-
-echo -e "$SEPARATOR\n${GREEN}${BOLD}Start:\t${TIMESTAMP:0:4}/${TIMESTAMP:4:2}/${TIMESTAMP:6:2} ${TIMESTAMP:8:2}:${TIMESTAMP:10:2}:${TIMESTAMP:12:2}${RESET}"
-
-for eachdev in $DEVANDFRIENDLYNAME
+for each in "${DevicesToBackup[@]}"
 do
-	TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+	#"BackupLevel;DeviceName;Description"
+	BackupLevel="$each"
+	BackupLevel="${BackupLevel%%;*}"
+	BackupLevel="${BackupLevel,,}"
+
+	if [[ "$BackupLevel" =~ [0-9] ]]
+	then
+		:
+	elif [ "$BackupLevel" == 'full' ]
+	then
+		BackupLevel=0
+	elif [ "$BackupLevel" == 'diff' ]
+	then
+		BackupLevel=1
+	else
+		printf "'BackupLevel' must be 'full', 'diff', or an integer 0 through 9.\n"
+		exit 4
+	fi
 
 	# Extract Device name from semicolon delimited argument
-	DEVNAME="${eachdev%%;*}"
+	DevName="$each"
+	DevName="${DevName#*;}"
+	DevName="${DevName%;*}"
+
+	if ! egrep -qi '/dev/.+' <<< "$DevName"
+	then
+		printf "That ('$DevName') doesn't appear to contain a device name.\n"
+		showUsage
+		exit 3
+	fi
 
 	# Extract friendly name from semicolon delimited argument
-	FRIENDLYNAME="${eachdev##*;}"
+	FriendlyName="$each"
+	FriendlyName="${FriendlyName##*;}"
+
+	printf "${SEPARATOR}\n${GREEN}${BOLD}Start:\t${TIMESTAMP:0:4}/${TIMESTAMP:4:2}/${TIMESTAMP:6:2} ${TIMESTAMP:8:2}:${TIMESTAMP:10:2}:${TIMESTAMP:12:2}${RESET}\n"
+
+	TIMESTAMP=$(date +'%Y%m%d%H%M%S')
 
 	# Generate a friendly media label field for regular output and xfsdump output
-	MEDIALABEL="${HOST}, '${FRIENDLYNAME}' (${DEVNAME}) Level ${LEVEL} backup on ${TIMESTAMP:0:4}/${TIMESTAMP:4:2}/${TIMESTAMP:6:2} at ${TIMESTAMP:8:2}:${TIMESTAMP:10:2}:${TIMESTAMP:12:2}"
+	MEDIALABEL="${HOST}, '${FriendlyName}' (${DevName}) Level ${BackupLevel} backup on ${TIMESTAMP:0:4}/${TIMESTAMP:4:2}/${TIMESTAMP:6:2} at ${TIMESTAMP:8:2}:${TIMESTAMP:10:2}:${TIMESTAMP:12:2}"
 
 	# Output file name
-	OUTPUTFN="${BACKUPDIR}/${HOSTNAME}_${DEVNAME//\/}_${FRIENDLYNAME}_${TIMESTAMP:0:4}-${TIMESTAMP:4:2}-${TIMESTAMP:6:2}-${TIMESTAMP:8:2}-${TIMESTAMP:10:2}-${TIMESTAMP:12:2}_L${LEVEL}.xfs"
+	OUTPUTFN="${BACKUPDIR}/${HOSTNAME}_${DevName//\/}_${FriendlyName}_${TIMESTAMP:0:4}-${TIMESTAMP:4:2}-${TIMESTAMP:6:2}-${TIMESTAMP:8:2}-${TIMESTAMP:10:2}-${TIMESTAMP:12:2}_L${BackupLevel}.xfs"
 
-	echo -e "${GREEN}${BOLD}${MEDIALABEL} -> ${OUTPUTFN}${RESET}"
+	printf "${GREEN}${BOLD}${MEDIALABEL} -> ${OUTPUTFN}${RESET}\n"
 
 	xfsdump \
 		-v verbose \
-		-l $LEVEL \
+		-l $BackupLevel \
 		-L "$MEDIALABEL" \
 		-M "$MEDIALABEL" \
 		-f "$OUTPUTFN" \
-		"$DEVNAME"
+		"$DevName"
 	echo ''
 done
-echo -e "${GREEN}${BOLD}Done:\t$(date +'%Y/%m/%d %H:%M:%S')${RESET}\n${SEPARATOR}\n"
+
+printf "${GREEN}${BOLD}Done:\t$(date +'%Y/%m/%d %H:%M:%S')${RESET}\n${SEPARATOR}\n"
+
+
+

@@ -4,12 +4,12 @@
  CONFFILE="${CONFFILE##*/}"
  CONFFILE="${0%/*}/${CONFFILE%.*}.conf"
 
-if [ ! -f "${CONFFILE}" ]
+if [ -f "${CONFFILE}" ]
 then
+	. "${CONFFILE}"
+else
 	echo "'${CONFFILE}' doesn't exist. Aborting."
 	exit 1
-else
-	. "${CONFFILE}"
 fi
 
 NUMACTUAL=$(

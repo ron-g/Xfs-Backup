@@ -1,11 +1,18 @@
 #!/bin/bash
 
-. /scripts/TermColors
+. ./TermColors &> /dev/null
 DIRNAME="${0%/*}"
 SCRNAME="${0##*/}"
 SCRNAME="${SCRNAME%.*}.conf"
 CONFIGFILE="$DIRNAME/$SCRNAME"
-. "$CONFIGFILE" || (echo "'$CONFIGFILE' doesn't exist. Exiting." ; exit 1)
+
+if [ -f "$CONFIGFILE" ]
+then
+	. "$CONFIGFILE"
+else
+	echo "'$CONFIGFILE' doesn't exist. Exiting."
+	exit 1
+fi
 
 TOTALFULLXFSBACKUPS=$(
 	find \
