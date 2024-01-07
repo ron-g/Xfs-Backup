@@ -41,11 +41,9 @@ function showUsage() {
 
 if [ "$LOGAPPEND" == 'TRUE' ]
 then
-	:
-	#exec &>> "$LOGFILE"
+	exec &>> "$LOGFILE"
 else
-	:
-	#exec &> "$LOGFILE"
+	exec &> "$LOGFILE"
 fi
 
 for each in "${DevicesToBackup[@]}"
