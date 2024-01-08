@@ -24,9 +24,9 @@ else
 	exit 1
 fi
 
-if ! ls *.xbu &> /dev/null
+if ! ls "${0%/*}"/*.xbu &> /dev/null
 then
-	printf "There are no 'xbu' files identifying backup-able sources.\nBackupLevel=[full|diff|0-9]\nDevName=/dev/sdX2\nFriendlyName='Home'\n"
+	printf "There are no 'xbu' files identifying backup-able sources.\n\tBackupLevel=[full|diff|0-9]\n\tDevName=/dev/sdX2\n\tFriendlyName='Home'\n"
 	exit 4
 fi
 
