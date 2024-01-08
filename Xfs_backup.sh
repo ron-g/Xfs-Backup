@@ -13,7 +13,6 @@ SCRNAME="${0##*/}"
 SCRNAME="${SCRNAME%.*}.conf"
 
 CONFIGFILE="${DIRNAME}/${SCRNAME}"
-DevicesFile="${DIRNAME}/BackTheseUp.conf"
 HOST=$(hostname)
 
 # Provides some static variables
@@ -25,13 +24,10 @@ else
 	exit 1
 fi
 
-# Provides the backup levels and devices to back up
-if [ -f "$DevicesFile" ]
+if ! ls *.xbu &> /dev/null
 then
-	. "$DevicesFile"
-else
-	printf "Devices file missing. This is fatal.\n"
-	exit 1
+	printf "There are no 'xbu' files identifying backup-able sources.\nBackupLevel=[full|diff|0-9]\nDevName=/dev/sdX2\nFriendlyName='Home'\n"
+	exit 4
 fi
 
 function showUsage() {
@@ -46,12 +42,9 @@ else
 	exec &> "$LOGFILE"
 fi
 
-for each in "${DevicesToBackup[@]}"
+for each in *.xbu
 do
-	#"BackupLevel;DeviceName;Description"
-	BackupLevel="$each"
-	BackupLevel="${BackupLevel%%;*}"
-	BackupLevel="${BackupLevel,,}"
+	source "$each"
 
 	if [[ "$BackupLevel" =~ [0-9] ]]
 	then
@@ -67,21 +60,12 @@ do
 		exit 4
 	fi
 
-	# Extract Device name from semicolon delimited argument
-	DevName="$each"
-	DevName="${DevName#*;}"
-	DevName="${DevName%;*}"
-
 	if ! egrep -qi '/dev/.+' <<< "$DevName"
 	then
 		printf "That ('$DevName') doesn't appear to contain a device name.\n"
 		showUsage
 		exit 3
 	fi
-
-	# Extract friendly name from semicolon delimited argument
-	FriendlyName="$each"
-	FriendlyName="${FriendlyName##*;}"
 
 	printf "${SEPARATOR}\n${GREEN}${BOLD}Start:\t${TIMESTAMP:0:4}/${TIMESTAMP:4:2}/${TIMESTAMP:6:2} ${TIMESTAMP:8:2}:${TIMESTAMP:10:2}:${TIMESTAMP:12:2}${RESET}\n"
 
@@ -95,7 +79,7 @@ do
 
 	printf "${GREEN}${BOLD}${MEDIALABEL} -> ${OUTPUTFN}${RESET}\n"
 
-	xfsdump \
+	echo xfsdump \
 		-v verbose \
 		-l $BackupLevel \
 		-L "$MEDIALABEL" \

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+BackupLevel=0
+DevName='/dev/sdX2'
+FriendlyName='Homes'
+
