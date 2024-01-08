@@ -1,0 +1,18 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+
+# Don't do full backups (Sunday) on this line.
+0 4 * * Tue,Thu,Sat	root	/root/scripts/Xfs-Backup/Xfs_backup.sh
+
+# Do full backups on this line because it has the generations cleanup script with it.
+0 4 * * Sun		root	/root/scripts/Xfs-Backup/numberOfGenerations.sh ; /root/scripts/Xfs-Backup/Xfs_backup.sh
+
