@@ -1,6 +1,27 @@
 #!/bin/bash
 
+# 0 is a full backup
 BackupLevel=0
+
+# "full" is a Full backup
+BackupLevel='full'
+
+# "diff" is a differential backup that will take on the value of 1. To restore, you'd need a 0 and the latest 1 backup.
+BackupLevel='diff'
+
+# Integer 1 is a differential or first incremental. 2-9 are increasing orders of incrementals.
+BackupLevel=5
+
+# I use this to make Sunday a full backup, and Monday through Saturday are incrementals. To restore, you'd need a 0 and all the incrementals thereafter.
+BackupLevel=$(date +%w)
+
+# DevName can be a regular partition.
 DevName='/dev/sdX2'
+
+# DevName can be an LVM device.
+DevName='/dev/disk/by-id/dm-name-volgrp-HomeFolders'
+DevName='/dev/mapper/volgrp-HomeFolders'
+DevName='/dev/volgrp/HomeFolders'
+
 FriendlyName='Homes'
 
