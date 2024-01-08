@@ -79,7 +79,7 @@ do
 
 	printf "${GREEN}${BOLD}${MEDIALABEL} -> ${OUTPUTFN}${RESET}\n"
 
-	echo xfsdump \
+	xfsdump \
 		-v verbose \
 		-l $BackupLevel \
 		-L "$MEDIALABEL" \
