@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This is an example device config file.
+# Copy this file and change the extension to lower-case "xbu" to make it production.
+
 # 0 is a full backup
 BackupLevel=0
 
