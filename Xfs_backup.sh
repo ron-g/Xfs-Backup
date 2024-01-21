@@ -75,6 +75,7 @@ do
 	MEDIALABEL="${HOST}, '${FriendlyName}' (${DevName}) Level ${BackupLevel} backup on ${TIMESTAMP:0:4}/${TIMESTAMP:4:2}/${TIMESTAMP:6:2} at ${TIMESTAMP:8:2}:${TIMESTAMP:10:2}:${TIMESTAMP:12:2}"
 
 	# Output file name
+	DevName=$(sed -E "s_/_${DevSeparator}_g" <<< "$DevName")
 	OUTPUTFN="${BACKUPDIR}/${HOSTNAME}_${DevName//\/}_${FriendlyName}_${TIMESTAMP:0:4}-${TIMESTAMP:4:2}-${TIMESTAMP:6:2}-${TIMESTAMP:8:2}-${TIMESTAMP:10:2}-${TIMESTAMP:12:2}_L${BackupLevel}.xfs"
 
 	printf "${GREEN}${BOLD}${MEDIALABEL} -> ${OUTPUTFN}${RESET}\n"
