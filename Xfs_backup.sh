@@ -10,9 +10,9 @@ DIRNAME="${0%/*}"
 
 # Get my script name and generate from it an expected config file name
 SCRNAME="${0##*/}"
-SCRNAME="${SCRNAME%.*}.conf"
+SCRNAME="${SCRNAME%.*}"
 
-CONFIGFILE="${DIRNAME}/${SCRNAME}"
+CONFIGFILE="${DIRNAME}/${SCRNAME}.conf"
 HOST=$(hostname)
 
 # Provides some static variables
@@ -24,7 +24,7 @@ else
 	exit 1
 fi
 
-if ! ls "${0%/*}"/*.xbu &> /dev/null
+if ! ls "${DIRNAME}"/*.xbu &> /dev/null
 then
 	printf "There are no 'xbu' files identifying backup-able sources.\n\tBackupLevel=[full|diff|0-9]\n\tDevName=/dev/sdX2\n\tFriendlyName='Home'\n"
 	exit 4
@@ -42,7 +42,7 @@ else
 	exec &> "$LOGFILE"
 fi
 
-for each in *.xbu
+for each in "${DIRNAME}"/*.xbu
 do
 	source "$each"
 
@@ -75,8 +75,9 @@ do
 	MEDIALABEL="${HOST}, '${FriendlyName}' (${DevName}) Level ${BackupLevel} backup on ${TIMESTAMP:0:4}/${TIMESTAMP:4:2}/${TIMESTAMP:6:2} at ${TIMESTAMP:8:2}:${TIMESTAMP:10:2}:${TIMESTAMP:12:2}"
 
 	# Output file name
-	DevName=$(sed -E "s_/_${DevSeparator}_g" <<< "$DevName")
-	OUTPUTFN="${BACKUPDIR}/${HOSTNAME}_${DevName//\/}_${FriendlyName}_${TIMESTAMP:0:4}-${TIMESTAMP:4:2}-${TIMESTAMP:6:2}-${TIMESTAMP:8:2}-${TIMESTAMP:10:2}-${TIMESTAMP:12:2}_L${BackupLevel}.xfs"
+	#DevName=$(sed -E "s_/_${DevSeparator}_g" <<< "$DevName")
+	DevName="${DevName//\//${DevSeparator}}"
+	OUTPUTFN="${BACKUPDIR}/${HOSTNAME}_${DevName}_${FriendlyName}_${TIMESTAMP:0:4}-${TIMESTAMP:4:2}-${TIMESTAMP:6:2}-${TIMESTAMP:8:2}-${TIMESTAMP:10:2}-${TIMESTAMP:12:2}_L${BackupLevel}.xfs"
 
 	printf "${GREEN}${BOLD}${MEDIALABEL} -> ${OUTPUTFN}${RESET}\n"
 
@@ -91,6 +92,4 @@ do
 done
 
 printf "${GREEN}${BOLD}Done:\t$(date +'%Y/%m/%d %H:%M:%S')${RESET}\n${SEPARATOR}\n"
-
-
 
