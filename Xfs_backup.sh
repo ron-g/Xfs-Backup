@@ -1,6 +1,7 @@
 #!/bin/bash
 #set -e
 #set -u
+#set -x
 
 # Provides terminal colors. Not fatal if not exist
 . /scripts/TermColors &> /dev/null
@@ -30,6 +31,14 @@ then
 else
 	printf -- "!\"${BACKUPDIR}\" didn't exist. Creating.\n"
 	mkdir -pv "$BACKUPDIR"
+fi
+
+if which xfsdump &>/dev/null
+then
+	printf -- ""
+else
+	printf -- '-"xfsdump" not found. This is fatal. Aborting.\n\n'
+	exit 2
 fi
 
 if ! ls "${DIRNAME}"/*.xbu &> /dev/null
