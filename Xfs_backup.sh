@@ -24,6 +24,14 @@ else
 	exit 1
 fi
 
+if [ -d "${BACKUPDIR}" ]
+then
+	printf -- ""
+else
+	printf -- "!\"${BACKUPDIR}\" didn't exist. Creating.\n"
+	mkdir -pv "$BACKUPDIR"
+fi
+
 if ! ls "${DIRNAME}"/*.xbu &> /dev/null
 then
 	printf "There are no 'xbu' files identifying backup-able sources.\n\tBackupLevel=[full|diff|0-9]\n\tDevName=/dev/sdX2\n\tFriendlyName='Home'\n"
